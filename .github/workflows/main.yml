@@ -1,0 +1,37 @@
+name: Build KSword (Windows + Qt + MSBuild)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest   # GitHub's Windows runner with Visual Studio 2022 pre-installed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Install Qt 6.9.3 (MSVC 2022 64-bit)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+
+      - name: Build KSword solution
+        env:
+          KSWORD_QT_DIR: ${{ env.QT_ROOT_DIR }}   # This matches the exact env var expected by the project
+        run: |
+          cd Ksword5.1
+          msbuild .\Ksword5.1.sln /t:Build /p:Configuration=Debug /p:Platform=x64 /m
